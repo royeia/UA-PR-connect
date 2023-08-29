@@ -85,7 +85,7 @@ public class TestCertificates extends TestCase {
 	}
 	
 //	public void testPfx() throws GeneralSecurityException, IOException  {
-	// TODO vide FileUtilTest para verificar problema 
+	// TODO vide FileUtilTest para verificar problema
 //		CertificateUtils.saveToProtectedStore(keys.getPrivateKey()
 //				.getPrivateKey(), keys.getCertificate().getCertificate(), file,
 //				ALIAS, null, KEY_PASSWORD, "PKCS12");
