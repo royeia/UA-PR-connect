@@ -12,13 +12,16 @@
 
 package org.opcfoundation.ua.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
 
+import org.bouncycastle.util.encoders.Base64;
 import org.opcfoundation.ua.utils.bytebuffer.ByteQueue;
 
 
@@ -129,5 +132,41 @@ public class FileUtil {
         return result;
     }        
 
-    
+    public static void createCloseDeleteEmptyFile() throws IOException {
+        File file = new File("test.txt");
+        String path = file.getPath();
+        FileOutputStream fos = new FileOutputStream(path);
+        fos.close();
+        file.delete();
+    }
+
+    public static void createWriteCloseDeleteFile() throws IOException {
+        File file = new File("test.txt");
+        String path = file.getPath();
+        FileOutputStream fos = new FileOutputStream(path);
+        fos.write("Hello, world!".getBytes());
+        fos.close();
+        file.delete();
+    }
+    public static void manageKeyStoreExample() throws KeyStoreException, NoSuchProviderException, IOException, CertificateException, NoSuchAlgorithmException {
+        File fileSaida = new File("parapara.key");
+        fileSaida.createNewFile();
+        String path = fileSaida.getPath();
+        FileOutputStream fos = new FileOutputStream(path);
+        fos.write("pass".getBytes());
+        //fos.write("\n".getBytes(StandardCharsets.ISO_8859_1));
+        URL keystoreUrl = fileSaida.toURI().toURL();
+        URLConnection connection = keystoreUrl.openConnection();
+        InputStream is = connection.getInputStream();
+        KeyStore keyStore = KeyStore.getInstance("PKCS12", "SunJSSE");
+        keyStore = KeyStore.getInstance("PKCS12");
+        String pass = "pass";
+        char[] password = pass.toCharArray();
+        System.out.println(keyStore);
+        //keyStore.load(is, password);
+        System.out.println(keyStore);
+
+        //FIXME linkar com estes testes comentados:
+        // veja uso em FileUtilTest.java
+    }
 }
