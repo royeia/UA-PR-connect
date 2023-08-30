@@ -11,13 +11,10 @@
 */
 package org.opcfoundation.ua.utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -321,13 +318,14 @@ public class BouncyCastleUtils {
 	public static void writeToPem(Object key, File savePath, String password, String  algorithm)
 			throws IOException {
 		CryptoUtil.getSecurityProviderName();
-		JcaPEMWriter        pemWrt = new JcaPEMWriter(new OutputStreamWriter(new FileOutputStream(savePath.getCanonicalPath()) ));
+		JcaPEMWriter pemWrt = new JcaPEMWriter(new OutputStreamWriter(
+				new FileOutputStream(savePath.getCanonicalPath()) ));
 		if (password == null)
 			pemWrt.writeObject(key);
 		else {
 			char[] pw = password.toCharArray();
 			PEMEncryptor encryptor = new JcePEMEncryptorBuilder(algorithm).setProvider(CryptoUtil.getSecurityProviderName()).setSecureRandom(CryptoUtil.getRandom()).build(pw);
-			
+			// FIXME ponto de erro relativo aos TestesCertificados VIDE
 			pemWrt.writeObject(key, encryptor);
 		}
 		pemWrt.close();
@@ -368,30 +366,6 @@ public class BouncyCastleUtils {
 	public static Collection<List<?>> getSubjectAlternativeNames(
 			X509Certificate cert) throws CertificateParsingException {
 		return X509ExtensionUtil.getSubjectAlternativeNames(cert);
-//		try {
-//			byte[] ext = cert.getExtensionValue(SUBJECT_ALT_NAME_OID);
-//			if (ext == null)
-//				return null;
-//			DerValue val = new DerValue(ext);
-//			byte[] data = val.getOctetString();
-//	
-//			SubjectAlternativeNameExtension subjectAltNameExt = new SubjectAlternativeNameExtension(
-//					Boolean.FALSE, data);
-//	
-//			GeneralNames names;
-//			try {
-//				names = (GeneralNames) subjectAltNameExt
-//						.get(SubjectAlternativeNameExtension.SUBJECT_NAME);
-//			} catch (IOException ioe) {
-//				// should not occur
-//				return Collections.<List<?>> emptySet();
-//			}
-//			return makeAltNames(names);
-//		} catch (IOException ioe) {
-//			CertificateParsingException cpe = new CertificateParsingException();
-//			cpe.initCause(ioe);
-//			throw cpe;
-//		}
 	}
 
 	/**
@@ -403,6 +377,4 @@ public class BouncyCastleUtils {
 	public static byte[] PKCS5PasswordToBytes(char[] password) {
 		return PBEParametersGenerator.PKCS5PasswordToBytes(password);
 	}
-
-
 }
