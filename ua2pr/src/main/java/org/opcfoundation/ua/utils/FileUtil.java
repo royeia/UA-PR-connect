@@ -168,5 +168,6 @@ public class FileUtil {
 
         //FIXME linkar com estes testes comentados:
         // veja uso em FileUtilTest.java
+        fileSaida.delete();
     }
 }
