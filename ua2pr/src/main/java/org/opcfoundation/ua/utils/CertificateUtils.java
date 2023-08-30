@@ -873,13 +873,14 @@ public class CertificateUtils {
 		// create certificate chain containing only 1 certificate
 		Certificate[] chain = new Certificate[1];
 		chain[0] = certificate;
-		if (privateKeyPassword != null)
+		if (privateKeyPassword != null) {
 			store.setKeyEntry(alias, privateKey,
-					privateKeyPassword.toCharArray(), chain);
-		else
-			store.setKeyEntry(alias, privateKey, null, chain);
+					privateKeyPassword.toCharArray(), chain); }
+		else {
+			store.setKeyEntry(alias, privateKey, null, chain); }
 
-		FileOutputStream fOut = new FileOutputStream(storeLocation);
+		FileOutputStream fOut = new FileOutputStream(storeLocation.getPath());
+
 		try {
 			store.store(fOut, keyStorePassword == null ? null
 					: keyStorePassword.toCharArray());
