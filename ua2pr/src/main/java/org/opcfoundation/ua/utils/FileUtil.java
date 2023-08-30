@@ -148,26 +148,26 @@ public class FileUtil {
         fos.close();
         file.delete();
     }
-    public static void manageKeyStoreExample() throws KeyStoreException, NoSuchProviderException, IOException, CertificateException, NoSuchAlgorithmException {
-        File fileSaida = new File("parapara.key");
-        fileSaida.createNewFile();
-        String path = fileSaida.getPath();
-        FileOutputStream fos = new FileOutputStream(path);
-        fos.write("pass".getBytes());
-        //fos.write("\n".getBytes(StandardCharsets.ISO_8859_1));
-        URL keystoreUrl = fileSaida.toURI().toURL();
-        URLConnection connection = keystoreUrl.openConnection();
-        InputStream is = connection.getInputStream();
-        KeyStore keyStore = KeyStore.getInstance("PKCS12", "SunJSSE");
-        keyStore = KeyStore.getInstance("PKCS12");
-        String pass = "pass";
-        char[] password = pass.toCharArray();
-        System.out.println(keyStore);
-        //keyStore.load(is, password);
-        System.out.println(keyStore);
-
-        //FIXME linkar com estes testes comentados:
-        // veja uso em FileUtilTest.java
-        fileSaida.delete();
-    }
+//    public static void manageKeyStoreExample() throws KeyStoreException, NoSuchProviderException, IOException, CertificateException, NoSuchAlgorithmException {
+//        File fileSaida = new File("parapara.key");
+//        fileSaida.createNewFile();
+//        String path = fileSaida.getPath();
+//        FileOutputStream fos = new FileOutputStream(path);
+//        fos.write("pass".getBytes());
+//        //fos.write("\n".getBytes(StandardCharsets.ISO_8859_1));
+//        URL keystoreUrl = fileSaida.toURI().toURL();
+//        URLConnection connection = keystoreUrl.openConnection();
+//        InputStream is = connection.getInputStream();
+//        KeyStore keyStore = KeyStore.getInstance("PKCS12", "SunJSSE");
+//        keyStore = KeyStore.getInstance("PKCS12");
+//        String pass = "pass";
+//        char[] password = pass.toCharArray();
+//        System.out.println(keyStore);
+//        //keyStore.load(is, password);
+//        System.out.println(keyStore);
+//
+//        //FIXME linkar com estes testes comentados:
+//        // veja uso em FileUtilTest.java
+//        fileSaida.delete();
+//    }
 }
