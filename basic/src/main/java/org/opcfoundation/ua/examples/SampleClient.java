@@ -55,56 +55,17 @@ import org.opcfoundation.ua.transport.security.HttpsSecurityPolicy;
 import org.opcfoundation.ua.transport.security.KeyPair;
 import org.opcfoundation.ua.utils.CertificateUtils;
 
-/**
- * Sample client creates a connection to OPC UA Server (1st arg), browses and reads a boolean value.
- * It is configured to work against NanoServer example, using the address opc.tcp://localhost:8666/
- * 
- * NOTE: Does not work against SeverExample1, since it does not support Browse
- */
 public class SampleClient {
-
-  private static class MyValidationListener implements DefaultCertificateValidatorListener {
-
-    @Override
-    public ValidationResult onValidate(Cert certificate, ApplicationDescription applicationDescription,
-        EnumSet<CertificateCheck> passedChecks) {
-      System.out.println("Validating Server Certificate...");
-      if (passedChecks.containsAll(CertificateCheck.COMPULSORY)) {
-        System.out.println("Server Certificate is valid and trusted, accepting certificate!");
-        return ValidationResult.AcceptPermanently;
-      } else {
-        System.out.println("Certificate Details: " + certificate.getCertificate().toString());
-        System.out.println("Do you want to accept this certificate?\n" + " (A=Always, Y=Yes, this time, N=No)");
-        while (true) {
-          try {
-            char c;
-            c = Character.toLowerCase((char) System.in.read());
-            if (c == 'a') {
-              return ValidationResult.AcceptPermanently;
-            }
-            if (c == 'y') {
-              return ValidationResult.AcceptOnce;
-            }
-            if (c == 'n') {
-              return ValidationResult.Reject;
-            }
-          } catch (IOException e) {
-            System.out.println("Error reading input! Not accepting certificate.");
-            return ValidationResult.Reject;
-          }
-        }
-      }
-    }
-
-  }
-
+  private static final String URL_PADRAO = "opc.tcp://10.158.64.10:4840";
   public static void main(String[] args) throws Exception {
+    String url = null;
     if (args.length == 0) {
-      System.out.println("Usage: SampleClient [server uri]");
-      return;
+      url = URL_PADRAO;
+      //log.("Usage: URL da PR");
+    } else {
+      url = args[0];
+      System.out.print("Connecting to " + url + " .. ");
     }
-    String url = args[0];
-    System.out.print("SampleClient: Connecting to " + url + " .. ");
 
     ////////////// CLIENT //////////////
     // Create Client
@@ -143,15 +104,15 @@ public class SampleClient {
     myValidator.setValidationListener(myValidationListener);
 
     // Set myValidator as the validator for OpcTcp and Https
-    myClient.getApplication().getOpctcpSettings().setCertificateValidator(myValidator);
-    myClient.getApplication().getHttpsSettings().setCertificateValidator(myValidator);
-
-    // The HTTPS SecurityPolicies are defined separate from the endpoint securities
-    myClient.getApplication().getHttpsSettings().setHttpsSecurityPolicies(HttpsSecurityPolicy.ALL_104);
+//    myClient.getApplication().getOpctcpSettings().setCertificateValidator(myValidator);
+//    myClient.getApplication().getHttpsSettings().setCertificateValidator(myValidator);
+//
+//    // The HTTPS SecurityPolicies are defined separate from the endpoint securities
+//    myClient.getApplication().getHttpsSettings().setHttpsSecurityPolicies(HttpsSecurityPolicy.ALL_104);
 
     // The certificate to use for HTTPS
-    KeyPair myHttpsCertificate = ExampleKeys.getHttpsCert("SampleClient");
-    myClient.getApplication().getHttpsSettings().setKeyPair(myHttpsCertificate);
+    //KeyPair myHttpsCertificate = ExampleKeys.getHttpsCert("SampleClient");
+    //myClient.getApplication().getHttpsSettings().setKeyPair(myHttpsCertificate);
 
     SessionChannel mySession = myClient.createSessionChannel(url);
     // mySession.activate("username", "123");
@@ -171,13 +132,13 @@ public class SampleClient {
 
     // Read Namespace Array
     ReadResponse res5 = mySession.Read(null, null, TimestampsToReturn.Neither,
-        new ReadValueId(Identifiers.Server_NamespaceArray, Attributes.Value, null, null));
+            new ReadValueId(Identifiers.Server_NamespaceArray, Attributes.Value, null, null));
     String[] namespaceArray = (String[]) res5.getResults()[0].getValue().getValue();
     System.out.println(Arrays.toString(namespaceArray));
 
     // Read a variable (Works with NanoServer example!)
     ReadResponse res4 = mySession.Read(null, 500.0, TimestampsToReturn.Source,
-        new ReadValueId(new NodeId(1, "Boolean"), Attributes.Value, null, null));
+            new ReadValueId(new NodeId(1, "Boolean"), Attributes.Value, null, null));
     System.out.println(res4);
 
     // Press enter to shutdown
@@ -192,5 +153,36 @@ public class SampleClient {
     //////////////////////////////////////
 
   }
-
+  private static class MyValidationListener implements DefaultCertificateValidatorListener {
+    @Override
+    public ValidationResult onValidate(Cert certificate, ApplicationDescription applicationDescription,
+        EnumSet<CertificateCheck> passedChecks) {
+      System.out.println("Validating Server Certificate...");
+      if (passedChecks.containsAll(CertificateCheck.COMPULSORY)) {
+        System.out.println("Server Certificate is valid and trusted, accepting certificate!");
+        return ValidationResult.AcceptPermanently;
+      } else {
+        System.out.println("Certificate Details: " + certificate.getCertificate().toString());
+        System.out.println("Do you want to accept this certificate?\n" + " (A=Always, Y=Yes, this time, N=No)");
+        while (true) {
+          try {
+            char c;
+            c = Character.toLowerCase((char) System.in.read());
+            if (c == 'a') {
+              return ValidationResult.AcceptPermanently;
+            }
+            if (c == 'y') {
+              return ValidationResult.AcceptOnce;
+            }
+            if (c == 'n') {
+              return ValidationResult.Reject;
+            }
+          } catch (IOException e) {
+            System.out.println("Error reading input! Not accepting certificate.");
+            return ValidationResult.Reject;
+          }
+        }
+      }
+    }
+  }
 }
