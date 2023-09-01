@@ -1,153 +1,114 @@
-# OPC Foundation UA JAVA Legacy
-
-**This repository is provided by OPC Foundation as legacy support for an Java  version for OPC UA. It will not receive further features and updates.**
-
-The OPC Foundation will continue maintenance of the .NET Stack which is based on .NET Standard. It can be found [here](https://github.com/OPCFoundation/UA-.NETStandard).
-
+Iniciando experimentos para controle de PR.
 ---
-The OPC Foundation has formally released the Unified Architecture Java Stack and Sample Code to the community.
+# TODO <- start Setup
 
-Please review official site page (http://opcfoundation.github.io/UA-Java-Legacy/) for:
- * Overview
- * Licensing
- * Sample Applications overview
+# OPC Foundation UA JAVA - samples
 
-## Recommended Development Environment
-Note these are recommended, earlier versions might work.
+This subproject contains samples for using the Stack.
 
-* Eclipse 4.5.2 (Mars)
-* Maven 3.3.3 (included in Eclipse 4.5.2)
-* JDK 8
-* JDK 6, in case you want to be sure that the built jar is java 6 compatible
+List of samples:
+* BigCertificateExample is the main example, which can be used to test UA Binary and HTTPS protocols. The application will instantiate a very basic server and connects a client to the server.
+* ServerExample1 is a basic test for starting a server
+* SampleClient is a simple test client application, which connects to a server, browses the address space and reads a value from status.
+* ClientExample* are a basic tests for connecting to various servers.
+* NanoServer is a an example of a minimal working UA server. This server is intended to conform to Nano Embedded Device Server Profile.
 
-The JDK(s) must have the sunjce_provider, e.g. use Oracle or OpenJDK (because the stack has optional support for the sun jce crypto provider)
+## Using
 
-## Runtime Dependencies
-The Stack requires Java SE 6 or later to run (for building requirements, see under 'Building the Stack').
+Import this Maven project to your IDE. Assuming your IDE can match the main stack project and this example one, you can start the samples within the IDE directly (works on eclipse). Assuming not or if you want to build the samples using maven, you need to first build the Stack and install/deploy it to your local/internal repository. 
 
-See pom.xml for details about dependency jar versions.
+Alternatively to use from command line: ```mvn clean install``` the main project and then ```mvn clean package``` this project. Bat/sh scripts used for starting the samples are generated to 'target/assemblies/bin'.
 
-The following dependencies are mandatory
-* org.slf4j, SLF4J logging facade
+## Certificates
 
-Additionally the following dependencies are optional
-* org.bouncycastle, Bouncy Castle, for using bouncy castle crypto provider (see 'Security' section)
-* com.madgag.spongycastle, Spongy Castle, for using spongycastle crypto provider (used in android, See 'Security' section)
-* org.apache.httpcomponents, HTTPS support libs, for https transport protocol support
+The sample applications create several certificates:
 
-Library licenses are in the license-directory.
-All Apache libraries use the Apache License 2.0. 
-Bouncy Castle and Spongy Castle use the Bouncy Castle License. 
+* OPC UA application instance certificate (self-signed) and private key, which are stored in <AppName>.der & .pem
+* CA root certificate, which is used to sign the HTTPS certificate, stored in SampleCA.der & .pem
+* HTTPS certificate (signed with SampleCA), stored in <AppName>_https.der & .pem
+The certificates are stored in the root of the project directory (but are .gitignored).
 
+The Java sample applications do not validate the certificates, so they accept secure connections with any application that has a certificate. Other applications may validate the certificates, and you need to follow their instructions on how to accept other application or HTTPS certificates.
 
-## Building the Stack
-As of 1.03 the project is a maven project.
+See the org.opcfoundation.ua.examples.certs.Examples.java for details on how the certificates and private keys are saved and loaded from files.
 
-Note that the built jar will be only compatible for the java version it is built with (see the section 'Building Java 6 compatible release' for more information).
+Also see the section "Certificate validation" on how to define your own validators.
 
-#### Compiling ####
-* Import the project in your favorite IDE
- * e.g. in Eclipse Import->Existing Maven
-* Execute the 'package' phase.
+## Certificate key size
 
-Alternatively assuming you have Maven installed and in PATH, you can build from the command line:
+The default key size for new certificates is 2048 bits. You may change this to 1024 or 4096 with CertificateUtils.setKeySize() before creating the certificates, if necessary.
+
+Note that the different security policies have limitations, regarding to the certificate keys size:
+* Basic128Rsa16 and Basic256 require a certificate of 1024 or 2048 bits (NOTE THAT THESE ARE DEPRECATED SINCE OPC UA 1.04)
+* Basic256Sha256, Aes128Sha256RsaOaep & Aes256Sha256RsaPss require a certificate of 2048 or 4096 bits  
+
+In order to enable all security protocols, you must define a key size of 2048 bits or enable two application instance certificates. 
+You can use Application.addApplicationInstanceCertificate() to add new certificates as necessary. The stack will automatically use the 
+correct certificate depending on the security policy used for communications. 
+
+## HTTPS certificates and .NET client applications
+
+The client applications built with the OPC Foundation .NET stack require that the server's HTTPS certificate is signed by a trusted CA certificate. Therefore, the samples create a SampleCA certificate, which they use to sign the HTTPS certificate. In order to define a certificate (e.g. the SampleCA) as Trusted Root Certificate, you must install that into the respective Windows certificate store. 
+
+The following instructions define how to do that:
+
+http://technet.microsoft.com/en-us/library/cc754841.aspx#BKMK_addlocal
+
+Or you can just 
+* double click the .der file to open it in Windows,
+* click "Install Certificate...",
+* when asked for the certificate store, select "Place all certificates in the following store" and
+* "Browse..." for the "Trusted Root Certificate Authorities"
+
+## Certificate validation
+
+The application object is initialized to accept all certificates with the following definitions:
+``` 
+getOpctcpSettings().setCertificateValidator( CertificateValidator.ALLOW_ALL );
+getHttpsSettings().setCertificateValidator( CertificateValidator.ALLOW_ALL );
 ```
-mvn package
-```
-The resulting artifacts are in the 'target' folder
-* opc-ua-stack-XXX.jar, the main jar
-* opc-ua-stack-XXX-javadoc.jar, javadoc documentation
-* opc-ua-stack-XXX-sources.jar, sources
-* opc-ua-stack-XXX-project.zip, zip of this project (without build artifacts)
-* opc-ua-stack-XXX-dependencies.zip, zip of the project dependencies
+You can replace the validators with your own implementation (of CertificateValidator) by assigning them to these properties of
+your Application instance.
+
+## Logging
+
+The stack is written against SLF4J, which enables a free selection of backend logging libraries to be used. By default, 
+the example projects use logback 1.2, which is a native SLF4J implementation and supports Java 6.
+
+You can find the logging configuration from src/main/resources/logback.xml
+
+## Common Problems - OPC UA Java Stack
+
+When running the sample server (ServerExample1) and sample clients (ClientExample1 and SampleClient) you 
+might encounter problems which prevent a successful connection. We have documented below common causes 
+for connectivity problems, which include: 
+
+- EndpointUrl mismatch
+- Java Security Policies
 
 
-#### Building Java 6 compatible release ####
-If you want to be sure the built jar is Java 6 compatible, you need to install a Java 6 JDK. In addition, because newest maven versions require at least Java 7, you need to also install it (or later) too.
 
-The reason for requiring a version 6 of the JDK is that, while some newer versions of JDK have support for compiling to older versios of Java it is not enough to just define the ```source``` and the ```target``` arguments to ```1.6```. In addition a ```bootstrapclasspath``` argument needs to be defined (and pointed to a Java 6 installation) in order to use correct versions of the standard java libraries. Another option is using the older JDK version to compile by using maven-toolchains-plugin, which this project uses. It should also make this more future proof in case future JDK versions drop support for target 1.6, with JDK 9 being the last to support it (see https://bugs.openjdk.java.net/browse/JDK-8028563)
-
-You need to activate profile 'jdk6' to use the toolchains plugin. 
-
-Maven needs to know where your JDK 6 installation is. To setup this create a file 'toolchains.xml' in your .m2 folder (which exists in your home folder) with the following contents:
-```xml
-<toolchains>
-  <toolchain>
-	<type>jdk</type>
-	<provides>
-	  <version>1.6</version>
-	  <vendor>sun</vendor>
-	</provides>
-	<configuration>
-	  <jdkHome>ABSOLUTE PATH TO JAVA 6 JDK HOME</jdkHome>
-	</configuration>
-  </toolchain>
-</toolchains>
-```
-If you have no need to have a Java 6 supported build artifact, then you can run the build with the `jdk6` profile disabled.
- 
-
-## Examples
-
-The 'examples' folder has a separate maven project that contains the samples, it has a dependency to the main stack project. See the examples/README.md for more information.
+### EndpointUrl Mismatch
+	Summary:    The EndpointUrl used by the Client must match the Server's EndpointUrl.
+	Resolution: 1. Launch the sample Server (ServerExample1)
+				2. Find the EndpointUrl in the output console (e.g. opc.tcp://MyHost:8666/UAExample)
+				3. Modify the "Run Configuration" for the Client (ClientExample1 or SampleClient): 
+					a. In Eclipse, open Run -> Run Configurations...
+					b. Expand "Java Application" in the left-navigation and choose a Client project.
+					c. Click the "Arguments" tab
+					d. Paste the Server's EndpointUrl (copied in step #2).
+					e. Click "Apply" and then "Run".
+				4. The Client should now connect successfully to the UA Server.
 
 
-## Notes for developers
-The stack codegen is provided under the 'codegen' folder. See codegen/README.md for more information
-
-### Package file structure description
-See generated javadoc after building, or package-info.java files in each package
-
-### Mappings between Java and OPC UA types
-See the javadoc for package org.opcfoudnation.ua.builtintypes
-
-### Security
-Security libraries are used as they are available. If no extra libraries are available, 
-the Sun JCE implementation will be used.  Testing has so far based on the Bouncy Castle 
-library and it is therefore recommended in normal applications.
-
-The current implementation, since version 1.02.337.0, is based on a flexible CryptoProvider
-model. There are several implementations of this interface available in the stack and you 
-can also implement your own, if you have a custom security framework that you need to use.
-
-The stack will pick a default CryptoProvider automatically as it finds them from the class
-path. Alternatively, you can define the provider that you wish to use by setting it with 
-CryptoUtil.setCryptoProvider() or with CryptoUtil.setSecurityPoviderName(). 
-
-In the same manner, custom certificate framework can be used by implementing interface CertificateProvider 
-and setting it with CertificateUtils.setCertificateProvider().
-
-Current CryptoProvider implementations:
-
-BcCryptoProvider (default, if Bouncy Castle is in the class path: uses Bouncy Castle directly)
-ScCryptoProvider (default in Android, if Spongy Castle is in the class path)
-SunJceCryptoProvider (default if Bouncy Castle or Spongy Castle are not available)
-BcJceCryptoProvider (uses Bouncy Castle via the JCE crypto framework)
-ScJceCryptoProvider (uses Spongy Castle via the JCE crypto framework)
-
-If any of the ...JceCryptoProvider is used, you will have to install the JCE Unlimited Strength 
-Jurisdiction Policy Files, from Oracle (for Java 6, 7 or 8, respectively), to enable support for 
-256 bit security policies:
-
-JRE6: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html
-JRE7: http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
-JRE8: http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
-
-Android includes a limited version of Bouncy Castle and the standard Bouncy Castle cannot 
-be installed there. It also does not include the Sun classes. However, the Spongy Castle
-libraries will provide the same functionality as Bouncy Castle in Android, so these 
-libraries should be used in Android, unless the application can do without security altogether.
-
-Current CertificateProvider implementations:
-
-BcCertificateProvider (default, if Bouncy Castle is in the class path)
-ScCertificateProvider (default in Android, if Spongy Castle is in the class path)
-SunJceCertificateProvider (default if Bouncy Castle or Spongy Castle are not available)
 
 
-## Known issues
-* TLS 1.2 policy required by OPC UA does not work (required ciphers not supported by JSSE) 
-* HTTPS testing is not finished yet with the other stacks
-* .NET Client requires that the server has a certificate signed by a trusted CA, if HTTPS is used. See 'examples/README.md'.
-
+### Java Security Policies
+	Summary:	You see an error (in red) that says "Illegal key size".
+	Resolution:	1. Your Java runtime probably needs to update the Java Cryptography Extension (JCE) policy files.
+				   (JRE 6: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html)
+				2. Extract the JCE download contents: local_policy.jar and US_export_policy.jar 
+				3. Copy the 2 files to your Java security directory (backup your original files first): 
+				   (JRE 6: C:\Program Files\Java\jre6\lib\security)
+				4. Recompile and re-run your Java sample applications, Server and Client!
 
